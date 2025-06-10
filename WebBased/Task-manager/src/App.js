@@ -1,14 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Filter, Code, User, Wrench, Calendar, AlertTriangle, Shuffle } from 'lucide-react';
 
 const TaskStackManager = () => {
-  const [tasks, setTasks] = useState([]);
+  // Load tasks from localStorage on initial render
+  const [tasks, setTasks] = useState(() => {
+    try {
+      const savedTasks = localStorage.getItem('taskManager-tasks');
+      return savedTasks ? JSON.parse(savedTasks) : [];
+    } catch (error) {
+      console.error('Error loading tasks from localStorage:', error);
+      return [];
+    }
+  });
+
   const [newTask, setNewTask] = useState('');
   const [newNote, setNewNote] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('coding');
   const [activeFilter, setActiveFilter] = useState('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [randomTask, setRandomTask] = useState(null);
+
+  // Save tasks to localStorage whenever tasks change
+  useEffect(() => {
+    try {
+      localStorage.setItem('taskManager-tasks', JSON.stringify(tasks));
+    } catch (error) {
+      console.error('Error saving tasks to localStorage:', error);
+    }
+  }, [tasks]);
 
   const categories = {
     coding: { 
@@ -71,6 +90,14 @@ const TaskStackManager = () => {
     }
   };
 
+  // Clear all tasks function (optional - you can add a button for this)
+  const clearAllTasks = () => {
+    if (window.confirm('Are you sure you want to clear all tasks? This cannot be undone.')) {
+      setTasks([]);
+      setRandomTask(null);
+    }
+  };
+
   const selectRandomTask = () => {
     const availableTasks = activeFilter === 'all' ? tasks : tasks.filter(task => task.category === activeFilter);
     if (availableTasks.length > 0) {
@@ -102,6 +129,11 @@ const TaskStackManager = () => {
             Organise Your Day:)
           </h1>
           <p className="text-slate-600">Organize your tasks with beautiful simplicity</p>
+          {tasks.length > 0 && (
+            <p className="text-sm text-slate-500 mt-2">
+              💾 Your tasks are automatically saved and will persist across browser sessions
+            </p>
+          )}
         </div>
 
         {/* Stats Overview */}
@@ -138,6 +170,16 @@ const TaskStackManager = () => {
             <Shuffle className="w-5 h-5" />
             Random Task
           </button>
+
+          {/* Clear All Tasks Button (Optional) */}
+          {tasks.length > 0 && (
+            <button
+              onClick={clearAllTasks}
+              className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-200 hover:scale-105"
+            >
+              🗑️ Clear All
+            </button>
+          )}
 
           {/* Filter Dropdown */}
           <div className="relative">
